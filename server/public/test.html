@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-time Test</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .online { color: green; }
+        .offline { color: red; }
+        #events { height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Real-time System Test</h1>
+        
+        <!-- Login Section -->
+        <div class="card">
+            <h2>Login</h2>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+
+        <!-- Registration Section -->
+        <div class="card">
+            <h2>Register</h2>
+            <input type="text" id="regName" placeholder="Name">
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Password">
+            <select id="regRole">
+                <option value="student">Student</option>
+                <option value="faculty">Faculty</option>
+            </select>
+            <button onclick="register()">Register</button>
+        </div>
+
+        <!-- Real-time Events -->
+        <div class="card">
+            <h2>Real-time Events</h2>
+            <div id="events"></div>
+        </div>
+
+        <!-- Active Users (Admin Only) -->
+        <div class="card" id="adminPanel" style="display: none;">
+            <h2>Active Users</h2>
+            <button onclick="getActiveUsers()">Refresh Active Users</button>
+            <div id="activeUsers"></div>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        let token;
+
+        function addEvent(text) {
+            const events = document.getElementById('events');
+            const event = document.createElement('div');
+            event.textContent = new Date().toLocaleTimeString() + ': ' + text;
+            events.appendChild(event);
+            events.scrollTop = events.scrollHeight;
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                if (data.token) {
+                    token = data.token;
+                    connectSocket(token);
+                    addEvent('Logged in successfully');
+                    
+                    if (data.user.role === 'admin') {
+                        document.getElementById('adminPanel').style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                addEvent('Login failed: ' + error.message);
+            }
+        }
+
+        async function register() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+
+                const data = await response.json();
+                if (data.token) {
+                    token = data.token;
+                    connectSocket(token);
+                    addEvent('Registered successfully');
+                }
+            } catch (error) {
+                addEvent('Registration failed: ' + error.message);
+            }
+        }
+
+        function connectSocket(token) {
+            if (socket) {
+                socket.disconnect();
+            }
+
+            socket = io('http://localhost:5000', {
+                auth: { token }
+            });
+
+            socket.on('connect', () => {
+                addEvent('Socket connected');
+            });
+
+            socket.on('newUserRegistration', (data) => {
+                addEvent(`New user registered: ${data.name}`);
+            });
+
+            socket.on('userLogin', (data) => {
+                addEvent(`User logged in: ${data.name}`);
+            });
+
+            socket.on('userStatusChange', (data) => {
+                addEvent(`User ${data.name} is ${data.status}`);
+            });
+
+            socket.on('activeUsers', (users) => {
+                const activeUsersDiv = document.getElementById('activeUsers');
+                activeUsersDiv.innerHTML = users.map(user => 
+                    `<div>${user.name} (${user.role})</div>`
+                ).join('');
+            });
+
+            socket.on('error', (error) => {
+                addEvent('Socket error: ' + error.message);
+            });
+
+            socket.on('disconnect', () => {
+                addEvent('Socket disconnected');
+            });
+        }
+
+        function getActiveUsers() {
+            if (socket) {
+                socket.emit('getActiveUsers');
+            }
+        }
+    </script>
+</body>
+</html> 

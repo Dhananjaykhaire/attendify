@@ -1,0 +1,78 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Build outputs
+/dist
+/build
+/out
+/.next
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+/coverage
+
+# Editor/IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.editorconfig
+
+# Compiled output
+dist/
+dist-ssr/
+/out/
+
+# Debug
+.debug
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Media files that might be uploaded during development
+/uploads
+/public/uploads
+
+# Server-specific
+server/public/uploads/
+
+# ML models - may be large, can be downloaded at runtime
+**/*.weights
+**/*.h5
+**/model_data/
+
+# Production
+/client/build
+/admin/build
+
+# Email Configuration
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-specific-password
+EMAIL_SERVICE=gmail
+
+# JWT and App Configuration
+JWT_SECRET=your-secret-key-here
+CLIENT_URL=http://localhost:3000
+
+# MongoDB Configuration
+MONGODB_URI=mongodb+srv://dhananjaykhaire2004:Dk2004@smart-atttend.d2zoi3b.mongodb.net/?retryWrites=true&w=majority&appName=smart-atttend
