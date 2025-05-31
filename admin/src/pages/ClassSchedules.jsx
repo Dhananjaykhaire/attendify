@@ -210,8 +210,13 @@ const ClassSchedules = ({ currentUser }) => {
                 </div>
               </div>
 
-              <select name="department" value={formData.department || ''} onChange={handleInputChange} required className="w-full border p-2 rounded">
-                <option value="">Select Department</option>
+              <select
+                name="department"
+                value={formData.department || ''}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select department</option>
                 {departments.map((d) => (
                   <option key={d._id} value={d._id}>{d.name}</option>
                 ))}

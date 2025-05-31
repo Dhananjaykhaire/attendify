@@ -8,6 +8,7 @@ const initialForm = {
   startTime: '',
   endTime: '',
   days: '',
+  department: '',
 };
 
 const ClassSchedules = () => {
@@ -23,9 +24,11 @@ const ClassSchedules = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const { currentUser } = useAuth();
+  const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
     fetchClasses();
+    fetchDepartments();
     if (currentUser?.role === 'admin') {
       fetchFaculty();
     }
@@ -35,7 +38,7 @@ const ClassSchedules = () => {
     setLoading(true);
     try {
       const res = await axios.get('/api/class-schedules');
-      const classesData = res.data.classes || res.data;
+      const classesData = res.data.classSchedules || res.data.classes || res.data;
       setClasses(Array.isArray(classesData) ? classesData : []);
     } catch (err) {
       setError('Failed to load class schedules.');
@@ -73,6 +76,15 @@ const ClassSchedules = () => {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const res = await axios.get('/api/departments');
+      setDepartments(res.data);
+    } catch (err) {
+      setDepartments([]);
+    }
+  };
+
   const handleSearch = (e) => {
     setSearch(e.target.value);
   };
@@ -92,6 +104,7 @@ const ClassSchedules = () => {
     if (!form.startTime) return 'Start time is required.';
     if (!form.endTime) return 'End time is required.';
     if (!form.days.trim()) return 'Days are required.';
+    if (!form.department) return 'Department is required.';
     return '';
   };
 
@@ -107,6 +120,8 @@ const ClassSchedules = () => {
       const payload = {
         ...form,
         days: form.days.split(',').map((d) => d.trim()),
+        faculty: currentUser._id,
+        department: form.department,
       };
       await axios.post('/api/class-schedules', payload);
       setForm(initialForm);
@@ -125,10 +140,11 @@ const ClassSchedules = () => {
     setEditingId(cls._id);
     setForm({
       name: cls.name || '',
-      faculty: currentUser?.role === 'faculty' ? currentUser._id : (cls.faculty?._id || cls.faculty || ''),
+      faculty: currentUser._id,
       startTime: cls.startTime || '',
       endTime: cls.endTime || '',
       days: Array.isArray(cls.days) ? cls.days.join(', ') : (cls.days || ''),
+      department: cls.department?._id || cls.department || '',
     });
     setShowForm(true);
     setFormError('');
@@ -146,6 +162,8 @@ const ClassSchedules = () => {
       const payload = {
         ...form,
         days: form.days.split(',').map((d) => d.trim()),
+        faculty: currentUser._id,
+        department: form.department,
       };
       await axios.put(`/api/class-schedules/${editingId}`, payload);
       setForm(initialForm);
@@ -253,6 +271,22 @@ const ClassSchedules = () => {
                 disabled={submitting}
               />
             )}
+          </div>
+          <div className="mb-2">
+            <label className="block font-medium">Department</label>
+            <select
+              name="department"
+              value={form.department || ''}
+              onChange={handleFormChange}
+              required
+              className="border rounded px-3 py-2 w-full"
+              disabled={submitting}
+            >
+              <option value="">Select department</option>
+              {departments.map((d) => (
+                <option key={d._id} value={d._id}>{d.name}</option>
+              ))}
+            </select>
           </div>
           <div className="mb-2 flex gap-2">
             <div className="flex-1">

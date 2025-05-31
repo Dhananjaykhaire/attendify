@@ -1,0 +1,26 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Handle API requests
+RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+# Handle React routes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/index.html [QSA,L]
+
+# Security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-XSS-Protection "1; mode=block"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Enable CORS
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+
+# Cache control for static assets
+<FilesMatch "\.(css|js|jpg|jpeg|png|gif|ico)$">
+    Header set Cache-Control "max-age=31536000, public"
+</FilesMatch> 
