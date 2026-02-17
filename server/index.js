@@ -32,8 +32,9 @@ import notificationSettingsRoutes from './routes/notificationSettings.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
-dotenv.config({ path: path.join(__dirname, '.env.local') });
+// Load environment variables (.env by default, with optional local override)
+dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env.local'), override: true });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -126,18 +127,10 @@ const startServer = async () => {
     console.log('✅ MongoDB connected successfully');
     
     try {
-      // Find and fix admin user
-      const adminUser = await mongoose.model('User').findOne({ email: 'dhananjay.khaire2004@gmail.com' });
-      if (adminUser) {
-        adminUser.isActive = true;
-        await adminUser.save();
-        console.log('✅ Admin user activated successfully');
-      } else {
-        const User = mongoose.model('User');
-        await User.createDefaultAdmin();
-      }
+      const User = mongoose.model('User');
+      await User.createDefaultAdmin();
     } catch (error) {
-      console.error('Error managing admin account:', error);
+      console.error('Error ensuring default admin account:', error);
     }
 
     // Try to start server on the main port or alternative ports
@@ -149,7 +142,7 @@ const startServer = async () => {
               console.log(`✅ Server running on port ${port}`);
               console.log(`📡 Server accessible at:`);
               console.log(`   - Local: http://localhost:${port}`);
-              console.log(`   - Network: http://192.168.137.1:${port}`);
+              console.log(`   - Network: http://0.0.0.0:${port}`);
               resolve();
             })
             .once('error', (err) => {

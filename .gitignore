@@ -65,14 +65,6 @@ server/public/uploads/
 /client/build
 /admin/build
 
-# Email Configuration
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-specific-password
-EMAIL_SERVICE=gmail
-
-# JWT and App Configuration
-JWT_SECRET=your-secret-key-here
-CLIENT_URL=http://localhost:3000
-
-# MongoDB Configuration
-MONGODB_URI=mongodb+srv://dhananjaykhaire2004:Dk2004@smart-atttend.d2zoi3b.mongodb.net/?retryWrites=true&w=majority&appName=smart-atttend
+# Secrets / keys
+*.pem
+*.key

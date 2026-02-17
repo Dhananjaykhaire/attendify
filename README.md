@@ -1,4 +1,4 @@
-++++++++++++6+# Face Recognition Attendance System
+# Face Recognition Attendance System
 
 A modern attendance management system using facial recognition technology for contactless check-in and check-out.
 
@@ -187,3 +187,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [MongoDB](https://www.mongodb.com/) for database
 - [Express](https://expressjs.com/) for API framework
 - [Node.js](https://nodejs.org/) for server runtime
+
+
+## AWS Hosting (Recommended)
+
+For production, host the API on EC2 with Nginx + PM2 and host both frontend apps on S3 + CloudFront. Use Route 53 and ACM for DNS + TLS. See `DEPLOYMENT.md` for a complete step-by-step setup.
