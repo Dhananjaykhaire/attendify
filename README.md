@@ -1,4 +1,4 @@
-++++++++++++6+# Face Recognition Attendance System
+# Face Recognition Attendance System
 
 A modern attendance management system using facial recognition technology for contactless check-in and check-out.
 
@@ -96,19 +96,22 @@ The project is organized into three main components:
    ```bash
    cd server
    npm install
-   # Create a .env file with required environment variables
+   cp .env.example .env
+   # then update values in .env
    ```
 
 3. **Install client application dependencies**
    ```bash
    cd ../client
    npm install
+   cp .env.example .env
    ```
 
 4. **Install admin dashboard dependencies**
    ```bash
    cd ../admin
    npm install
+   cp .env.example .env
    ```
 
 5. **Start the development servers**
@@ -187,3 +190,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [MongoDB](https://www.mongodb.com/) for database
 - [Express](https://expressjs.com/) for API framework
 - [Node.js](https://nodejs.org/) for server runtime
+
+
+## AWS Hosting (Recommended)
+
+For production, host the API on EC2 with Nginx + PM2 and host both frontend apps on S3 + CloudFront. Use Route 53 and ACM for DNS + TLS. See `DEPLOYMENT.md` for a complete step-by-step setup.
+
+
+## Runtime health checks
+
+- API health endpoint: `GET /health`
+- API namespaced health endpoint: `GET /api/health`

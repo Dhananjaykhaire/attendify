@@ -89,30 +89,32 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Create default admin if none exists
+// Create bootstrap admin only if one does not already exist
 userSchema.statics.createDefaultAdmin = async function() {
   try {
-    // Delete any existing admin user first
-    await this.deleteOne({ email: 'dhananjay.khaire2004@gmail.com' });
-    console.log('Cleaned up existing admin user');
+    const existingAdmin = await this.findOne({ role: 'admin' });
+    if (existingAdmin) {
+      return existingAdmin;
+    }
 
-    // Create new admin with known password
-    const plainPassword = 'admin123';
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(plainPassword, salt);
+    const email = process.env.DEFAULT_ADMIN_EMAIL;
+    const password = process.env.DEFAULT_ADMIN_PASSWORD;
+    const name = process.env.DEFAULT_ADMIN_NAME || 'Admin';
+
+    if (!email || !password) {
+      console.warn('⚠️ No admin account found and DEFAULT_ADMIN_EMAIL / DEFAULT_ADMIN_PASSWORD are not set.');
+      return null;
+    }
 
     const admin = await this.create({
-      name: 'Admin',
-      email: 'dhananjay.khaire2004@gmail.com',
-      password: hashedPassword,
+      name,
+      email,
+      password,
       role: 'admin',
       isActive: true
     });
 
-    console.log('✅ Created new admin user with credentials:');
-    console.log('Email:', admin.email);
-    console.log('Password:', plainPassword);
-    
+    console.log(`✅ Default admin created: ${admin.email}`);
     return admin;
   } catch (error) {
     console.error('Error creating default admin:', error);

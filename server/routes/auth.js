@@ -10,6 +10,7 @@ import PasswordReset from '../models/PasswordReset.js';
 import { getPasswordResetEmailTemplate, getPasswordResetSuccessTemplate, getNewUserEmailTemplate } from '../utils/emailTemplates.js';
 import passport from 'passport';
 import GoogleStrategy from 'passport-google-oauth20';
+import { getJwtSecret, getRefreshTokenSecret } from '../config/env.js';
 
 const router = express.Router();
 
@@ -28,13 +29,15 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify email configuration on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('Email configuration error:', error);
-  } else {
-    console.log('Email server is ready to send messages');
-  }
-});
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV !== 'test') {
+  transporter.verify((error) => {
+    if (error) {
+      console.error('Email configuration error:', error);
+    } else {
+      console.log('Email server is ready to send messages');
+    }
+  });
+}
 
 // Helper function to generate access token
 const generateAccessToken = (user) => {
@@ -44,7 +47,7 @@ const generateAccessToken = (user) => {
       role: user.role,
       email: user.email
     },
-    process.env.JWT_SECRET || 'FaceRecognition',
+    getJwtSecret(),
     { 
       expiresIn: '24h',  // Access token expires in 24 hours
       algorithm: 'HS256'
@@ -59,7 +62,7 @@ const generateRefreshToken = (user) => {
       id: user._id,
       tokenVersion: user.tokenVersion || 0
     },
-    process.env.REFRESH_TOKEN_SECRET || 'FaceRecognitionRefresh',
+    getRefreshTokenSecret(),
     { 
       expiresIn: '7d' // Refresh token valid for 7 days
     }
@@ -76,7 +79,7 @@ const generateToken = (user) => {
       name: user.name,
       registrationId: user.registrationId
     },
-    process.env.JWT_SECRET || 'FaceRecognition',
+    getJwtSecret(),
     { 
       expiresIn: '24h', // Token expires in 24 hours
       algorithm: 'HS256'
@@ -97,7 +100,7 @@ const checkAdminOrFaculty = async (req, res, next) => {
       return res.status(401).json({ message: 'No token, authorization denied' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'FaceRecognition');
+    const decoded = jwt.verify(token, getJwtSecret());
     const user = await User.findById(decoded.id);
 
     if (!user || !['admin', 'faculty'].includes(user.role)) {
@@ -347,7 +350,7 @@ router.post('/refresh-token', async (req, res) => {
     // Verify refresh token
     const decoded = jwt.verify(
       refreshToken,
-      process.env.REFRESH_TOKEN_SECRET || 'FaceRecognitionRefresh'
+      getRefreshTokenSecret()
     );
 
     // Find user and check if refresh token matches
