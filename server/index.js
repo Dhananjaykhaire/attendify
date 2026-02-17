@@ -12,9 +12,9 @@ import { Server } from 'socket.io';
 import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import ImageKit from 'imagekit';
 import { validateImageKitConfig } from './config/imagekit.js';
 import { configureSocket } from './config/socket.js';
+import { getAllowedOrigins, validateCriticalEnv } from './config/env.js';
 import passport from './config/passport.js';
 
 // Import routes
@@ -32,8 +32,9 @@ import notificationSettingsRoutes from './routes/notificationSettings.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
-dotenv.config({ path: path.join(__dirname, '.env.local') });
+// Load environment variables (.env by default, with optional local override)
+dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env.local'), override: true });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -43,16 +44,21 @@ const ALTERNATIVE_PORTS = [5001, 5002, 5003, 5004, 5005];
 const server = http.createServer(app);
 
 // Configure Socket.IO with CORS
+const allowedOrigins = getAllowedOrigins();
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   }
 });
 
 // Set up global middleware
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(helmet());
@@ -101,11 +107,23 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/class-schedules', classScheduleRoutes);
 app.use('/api/notification-settings', notificationSettingsRoutes);
 
+
+// Health endpoints for load balancers / monitoring
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', service: 'attendify-api' });
+});
+
 // MongoDB Connection
 const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/face-recognition-attendance";
 
 const startServer = async () => {
   try {
+    validateCriticalEnv();
+
     // Validate ImageKit configuration
     if (!validateImageKitConfig()) {
       console.error('⚠️ ImageKit configuration is incomplete. Please check your .env.local file.');
@@ -126,18 +144,10 @@ const startServer = async () => {
     console.log('✅ MongoDB connected successfully');
     
     try {
-      // Find and fix admin user
-      const adminUser = await mongoose.model('User').findOne({ email: 'dhananjay.khaire2004@gmail.com' });
-      if (adminUser) {
-        adminUser.isActive = true;
-        await adminUser.save();
-        console.log('✅ Admin user activated successfully');
-      } else {
-        const User = mongoose.model('User');
-        await User.createDefaultAdmin();
-      }
+      const User = mongoose.model('User');
+      await User.createDefaultAdmin();
     } catch (error) {
-      console.error('Error managing admin account:', error);
+      console.error('Error ensuring default admin account:', error);
     }
 
     // Try to start server on the main port or alternative ports
@@ -149,7 +159,7 @@ const startServer = async () => {
               console.log(`✅ Server running on port ${port}`);
               console.log(`📡 Server accessible at:`);
               console.log(`   - Local: http://localhost:${port}`);
-              console.log(`   - Network: http://192.168.137.1:${port}`);
+              console.log(`   - Network: http://0.0.0.0:${port}`);
               resolve();
             })
             .once('error', (err) => {

@@ -2,11 +2,13 @@
   "name": "fullstack-app",
   "version": "1.0.0",
   "scripts": {
-    "client": "cd client && npm run start",
+    "client": "cd client && npm run dev",
     "admin": "cd admin && npm run dev",
-    "server": "cd server && node index.js",
+    "server": "cd server && npm run dev",
     "fullstack": "concurrently \"npm run server\" \"npm run client\"",
-    "fullstack-admin": "concurrently \"npm run server\" \"npm run admin\""
+    "fullstack-admin": "concurrently \"npm run server\" \"npm run admin\"",
+    "local:all": "concurrently \"npm run server\" \"npm run client\" \"npm run admin\"",
+    "build:all": "npm --prefix client run build && npm --prefix admin run build"
   },
   "dependencies": {
     "compression": "^1.8.0",

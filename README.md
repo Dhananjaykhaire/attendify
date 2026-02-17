@@ -1,4 +1,4 @@
-++++++++++++6+# Face Recognition Attendance System
+# Face Recognition Attendance System
 
 A modern attendance management system using facial recognition technology for contactless check-in and check-out.
 
@@ -96,19 +96,22 @@ The project is organized into three main components:
    ```bash
    cd server
    npm install
-   # Create a .env file with required environment variables
+   cp .env.example .env
+   # then update values in .env
    ```
 
 3. **Install client application dependencies**
    ```bash
    cd ../client
    npm install
+   cp .env.example .env
    ```
 
 4. **Install admin dashboard dependencies**
    ```bash
    cd ../admin
    npm install
+   cp .env.example .env
    ```
 
 5. **Start the development servers**
@@ -187,3 +190,67 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [MongoDB](https://www.mongodb.com/) for database
 - [Express](https://expressjs.com/) for API framework
 - [Node.js](https://nodejs.org/) for server runtime
+
+
+## AWS Hosting (Recommended)
+
+For production, host the API on EC2 with Nginx + PM2 and host both frontend apps on S3 + CloudFront. Use Route 53 and ACM for DNS + TLS. See `DEPLOYMENT.md` for a complete step-by-step setup.
+
+
+## Runtime health checks
+
+- API health endpoint: `GET /health`
+- API namespaced health endpoint: `GET /api/health`
+
+
+## Local Hosting (Recommended for now)
+
+Run all services locally from the project root:
+
+```bash
+npm install
+npm run local:all
+```
+
+Default local URLs:
+- User app: `http://localhost:5173`
+- Admin app: `http://localhost:5174`
+- API: `http://localhost:5000`
+
+Make sure you create `.env` files from examples in `server/`, `client/`, and `admin/` before running.
+
+## GitHub Hosting (Frontend only)
+
+
+### Why you are seeing documentation instead of the app
+
+If GitHub Pages is showing a markdown/docs-like page, it means Pages is not serving your built frontend (`client/dist`) yet.
+This project root contains `README.md`, so when Pages is pointed to the wrong source, you will see documentation-style content.
+
+Use this repository workflow:
+- enable Pages source as **GitHub Actions** in repo settings
+- push to `main` so `.github/workflows/deploy-client-pages.yml` builds and deploys `client/dist`
+- set repository variables (optional but recommended):
+  - `VITE_API_URL`
+  - `VITE_SOCKET_URL`
+
+After deploy, your URL will be:
+`https://<username>.github.io/<repo-name>/`
+
+> Note: GitHub Pages hosts only the frontend. The Node.js API must run separately (local/EC2/Render/etc.).
+
+
+GitHub Pages can host only static frontend assets, not the Node.js API.
+
+You can still host `client` or `admin` on GitHub Pages by building with a base path:
+
+```bash
+cd client
+VITE_BASE_PATH=/your-repo-name/ npm run build
+```
+
+Then deploy the `dist/` folder to Pages (or use a Pages workflow).
+For full project real-time functionality, keep API on a backend host (local/EC2/Render/etc.) and set:
+
+- `VITE_API_URL=https://your-api-domain`
+- `VITE_SOCKET_URL=https://your-api-domain`
