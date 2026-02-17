@@ -12,9 +12,9 @@ import { Server } from 'socket.io';
 import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import ImageKit from 'imagekit';
 import { validateImageKitConfig } from './config/imagekit.js';
 import { configureSocket } from './config/socket.js';
+import { getAllowedOrigins, validateCriticalEnv } from './config/env.js';
 import passport from './config/passport.js';
 
 // Import routes
@@ -44,16 +44,21 @@ const ALTERNATIVE_PORTS = [5001, 5002, 5003, 5004, 5005];
 const server = http.createServer(app);
 
 // Configure Socket.IO with CORS
+const allowedOrigins = getAllowedOrigins();
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   }
 });
 
 // Set up global middleware
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(helmet());
@@ -102,11 +107,23 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/class-schedules', classScheduleRoutes);
 app.use('/api/notification-settings', notificationSettingsRoutes);
 
+
+// Health endpoints for load balancers / monitoring
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', service: 'attendify-api' });
+});
+
 // MongoDB Connection
 const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/face-recognition-attendance";
 
 const startServer = async () => {
   try {
+    validateCriticalEnv();
+
     // Validate ImageKit configuration
     if (!validateImageKitConfig()) {
       console.error('⚠️ ImageKit configuration is incomplete. Please check your .env.local file.');

@@ -79,6 +79,7 @@ MONGODB_URI=<mongo-atlas-uri>
 JWT_SECRET=<strong-secret>
 JWT_EXPIRY=7d
 CLIENT_URL=https://app.yourdomain.com
+ALLOWED_ORIGINS=https://app.yourdomain.com,https://admin.yourdomain.com
 DEFAULT_ADMIN_EMAIL=admin@yourdomain.com
 DEFAULT_ADMIN_PASSWORD=<temporary-strong-password>
 DEFAULT_ADMIN_NAME=System Admin
@@ -176,5 +177,5 @@ In Route 53:
 pm2 status
 pm2 logs attendify-api
 sudo systemctl status nginx
-curl -I https://api.yourdomain.com
+curl -I https://api.yourdomain.com/health
 ```

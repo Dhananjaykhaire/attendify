@@ -1,10 +1,11 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { getJwtSecret } from '../config/env.js';
 
 // Helper function to verify token
 const verifyAuthToken = async (token) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'FaceRecognition');
+    const decoded = jwt.verify(token, getJwtSecret());
     const user = await User.findById(decoded.id).select('-password');
     
     if (!user) {
