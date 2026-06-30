@@ -1,4 +1,4 @@
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = () => process.env.NODE_ENV === 'production';
 
 const requireEnv = (key) => {
   const value = process.env[key];
@@ -10,7 +10,7 @@ const requireEnv = (key) => {
 
 export const getJwtSecret = () => {
   if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
-  if (isProduction) {
+  if (isProduction()) {
     throw new Error('JWT_SECRET is required in production');
   }
   return 'development-jwt-secret-change-me';
@@ -18,7 +18,7 @@ export const getJwtSecret = () => {
 
 export const getRefreshTokenSecret = () => {
   if (process.env.REFRESH_TOKEN_SECRET) return process.env.REFRESH_TOKEN_SECRET;
-  if (isProduction) {
+  if (isProduction()) {
     throw new Error('REFRESH_TOKEN_SECRET is required in production');
   }
   return 'development-refresh-secret-change-me';
@@ -34,7 +34,7 @@ export const getAllowedOrigins = () => {
 };
 
 export const validateCriticalEnv = () => {
-  if (!isProduction) return;
+  if (!isProduction()) return;
 
   requireEnv('MONGODB_URI');
   requireEnv('JWT_SECRET');
